@@ -80,7 +80,6 @@ func ProxyHandler(c *fiber.Ctx) error {
 }
 
 func GetMusic(c *fiber.Ctx) error {
-	c.Set("Content-type", "text/plain; charset=windows-1254")
 	rdb := database.NewRConnection()
 	defer rdb.RClose()
 	payload := struct {
@@ -88,19 +87,15 @@ func GetMusic(c *fiber.Ctx) error {
 	}{}
 	if err := c.BodyParser(&payload); err == nil {
 		if !strings.HasPrefix(payload.URL, "http") {
-			r, _ := regexp.Compile("([a-z]+):([a-zA-Z0-9_-]+)")
+			r, _ := regexp.Compile("([a-z]+):([a-zA-Z\\d_-]+)")
 			if r.MatchString(payload.URL) {
-				fmt.Println("matched")
 				matches := r.FindStringSubmatch(payload.URL)
 				search := fmt.Sprintf("%s_%s", matches[2], matches[1])
-				fmt.Println(search)
 				xx, _ := rdb.RGetSearchOne(search)
-				fmt.Println("aa", xx)
 				if xx != "" {
 					dataS := models.Music{}
 					json.Unmarshal([]byte(xx), &dataS)
-					c.Set("Content-type", "text/plain; charset=windows-1254")
-					t, _ := utils.ToISO88599(dataS.Title)
+					t := dataS.Title
 					return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), dataS.Filename, t, cases.Title(language.English).String(dataS.Extractor)))
 				}
 			}
@@ -112,8 +107,7 @@ func GetMusic(c *fiber.Ctx) error {
 			if len(dataSz) > 2 {
 				dataS := models.Music{}
 				json.Unmarshal([]byte(dataSz), &dataS)
-				c.Set("Content-type", "text/plain; charset=windows-1254")
-				t, _ := utils.ToISO88599(dataS.Title)
+				t := dataS.Title
 				return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), dataS.Filename, t, cases.Title(language.English).String(dataS.Extractor)))
 			}
 		} else if cachedKey == "no" {
@@ -133,16 +127,15 @@ func GetMusic(c *fiber.Ctx) error {
 		}
 		videoX.Filename = strings.ReplaceAll(videoX.Title, " ", "_")
 		videoX.Filename = utils.TurkishToEnglish(videoX.Filename)
-		sampleRegexp := regexp.MustCompile(`[^a-zA-Z0-9-_]`)
-		videoX.Filename = string(sampleRegexp.ReplaceAllString(videoX.Filename, ""))
+		sampleRegexp := regexp.MustCompile(`[^a-zA-Z\d-_]`)
+		videoX.Filename = sampleRegexp.ReplaceAllString(videoX.Filename, "")
 		if len(videoX.Filename) > 64 {
 			videoX.Filename = videoX.Filename[0:55]
 		}
 		videoX.Filename = fmt.Sprintf("%s_%s_%s.mp3", videoX.Filename, videoX.ID, videoX.Extractor)
 		dataS, _ := rdb.RGet(videoX.Filename)
 		if len(dataS) > 2 {
-			c.Set("Content-type", "text/plain; charset=windows-1254")
-			t, _ := utils.ToISO88599(videoX.Title)
+			t := videoX.Title
 			return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), videoX.Filename, t, cases.Title(language.English).String(videoX.Extractor)))
 		} else {
 			return c.SendString("yok")

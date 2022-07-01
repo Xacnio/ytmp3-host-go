@@ -34,7 +34,6 @@ func GetIPAddress(c *fiber.Ctx) string {
 }
 
 func deleteFile(filename string) {
-	fmt.Println(filename)
 	os.Remove(fmt.Sprintf("%s.mp3", filename))
 	os.Remove(fmt.Sprintf("%s.mp3.jpg", filename))
 	os.Remove(fmt.Sprintf("%s.mp3.webp", filename))
@@ -42,7 +41,6 @@ func deleteFile(filename string) {
 }
 
 func UploadProcess(c *fiber.Ctx, export bool) error {
-	c.Set("Content-type", "text/plain; charset=windows-1254")
 	rdb := database.NewRConnection()
 	defer rdb.RClose()
 	payload := struct {
@@ -59,15 +57,14 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 				dataS := models.Music{}
 				json.Unmarshal([]byte(dataSz), &dataS)
 				if export {
-					c.Set("Content-type", "text/plain; charset=windows-1254")
-					t, _ := utils.ToISO88599(dataS.Title)
+					t := dataS.Title
 					return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), dataS.Filename, t, cases.Title(language.English).String(dataS.Extractor)))
 				} else {
 					return c.Redirect(fmt.Sprintf("/%s", dataS.Filename))
 				}
 			}
 		} else if cachedKey == "no" {
-			return c.SendString(utils.ToISO88599_1("Error: Invalid download."))
+			return c.SendString("Error: Invalid download.")
 		}
 		cmd := exec.Command("yt-dlp", "-j", payload.URL)
 		out, _ := cmd.Output()
@@ -85,7 +82,7 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 		json.Unmarshal(out, &videoX)
 		if videoX.ID == "" {
 			rdb.RSetTTL(payload.URL, "no", time.Hour*24*10)
-			return c.SendString(utils.ToISO88599_1("Error: Invalid download."))
+			return c.SendString("Error: Invalid download.")
 		}
 		if videoX.Uploader != "" {
 			videoX.Title = videoX.Title + " - " + videoX.Uploader
@@ -95,8 +92,8 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 		}
 		videoX.Filename = strings.ReplaceAll(videoX.Title, " ", "_")
 		videoX.Filename = utils.TurkishToEnglish(videoX.Filename)
-		sampleRegexp := regexp.MustCompile(`[^a-zA-Z0-9-_]`)
-		videoX.Filename = string(sampleRegexp.ReplaceAllString(videoX.Filename, ""))
+		sampleRegexp := regexp.MustCompile(`[^a-zA-Z\d-_]`)
+		videoX.Filename = sampleRegexp.ReplaceAllString(videoX.Filename, "")
 		if len(videoX.Filename) > 64 {
 			videoX.Filename = videoX.Filename[0:55]
 		}
@@ -106,15 +103,14 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 		videoX.Title = strings.ReplaceAll(videoX.Title, "*", "")
 		if len(dataS) > 2 {
 			if export {
-				c.Set("Content-type", "text/plain; charset=windows-1254")
-				t, _ := utils.ToISO88599(videoX.Title)
+				t := videoX.Title
 				return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), videoX.Filename, t, strings.ToTitle(videoX.Extractor)))
 			} else {
 				return c.Redirect(fmt.Sprintf("/%s", videoX.Filename))
 			}
 		}
 		if videoX.Duration > 60*10 {
-			return c.SendString(utils.ToISO88599_1("Error: Maximum 10-minute videos are accepting!"))
+			return c.SendString("Error: Maximum 10-minute videos are accepting!")
 		}
 		output := fmt.Sprintf("web/data/%s", videoX.Filename)
 		fmt.Println(exec.Command("yt-dlp", "-i", "--extract-audio", "-x", "--audio-format mp3", "--audio-quality 0", payload.URL).String())
@@ -123,7 +119,7 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 			fData, err := os.Open(output)
 			if err != nil {
 				deleteFile(filename)
-				return c.SendString(utils.ToISO88599_1("Error: Download failed!"))
+				return c.SendString("Error: Download failed!")
 			}
 			reader := bufio.NewReader(fData)
 			url := fmt.Sprintf("%s/%s", configs.Get("FIBER_URL"), videoX.Filename)
@@ -133,25 +129,25 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 				fmt.Println(err)
 				fData.Close()
 				deleteFile(filename)
-				return c.SendString(utils.ToISO88599_1("Error: File save failed!"))
+				return c.SendString("Error: File save failed!")
 			}
 			if result.Audio == nil {
 				fData.Close()
 				deleteFile(filename)
-				return c.SendString(utils.ToISO88599_1("Error: File save failed!"))
+				return c.SendString("Error: File save failed!")
 			} else {
 				keyT := strings.Split(result.Caption, "/")
 				if len(keyT) != 4 {
 					fData.Close()
 					deleteFile(filename)
-					return c.SendString(utils.ToISO88599_1("Error: File save failed!"))
+					return c.SendString("Error: File save failed!")
 				}
 				key := keyT[3]
 				filef, errf := bot.Bot.FileByID(result.Audio.FileID)
 				if errf != nil {
 					fData.Close()
 					deleteFile(filename)
-					return c.SendString(utils.ToISO88599_1("Error: File save failed!"))
+					return c.SendString("Error: File save failed!")
 				}
 				data := models.Music{
 					UploadDate: time.Now().Unix(),
@@ -169,22 +165,21 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 				if errQ != nil {
 					fData.Close()
 					deleteFile(filename)
-					return c.SendString(utils.ToISO88599_1("Error: File save failed!"))
+					return c.SendString("Error: File save failed!")
 				}
 				fData.Close()
 				rdb.RSetTTL(payload.URL, key, time.Hour*24*10)
 				deleteFile(filename)
 				if export {
-					c.Set("Content-type", "text/plain; charset=windows-1254")
-					t, _ := utils.ToISO88599(videoX.Title)
+					t := videoX.Title
 					return c.SendString(fmt.Sprintf("%s/%s*%s*%s", configs.Get("FIBER_URL"), videoX.Filename, t, cases.Title(language.English).String(videoX.Extractor)))
 				} else {
 					return c.Redirect(fmt.Sprintf("/%s", videoX.Filename))
 				}
 			}
 		} else {
-			return c.SendString(utils.ToISO88599_1("Error: Download failed!"))
+			return c.SendString("Error: Download failed!")
 		}
 	}
-	return c.SendString(utils.ToISO88599_1("Error: Invalid request!"))
+	return c.SendString("Error: Invalid request!")
 }

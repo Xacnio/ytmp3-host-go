@@ -7,7 +7,6 @@ import (
 	"github.com/Xacnio/ytmp3-host-go/pkg/configs"
 	"github.com/Xacnio/ytmp3-host-go/platform/database"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html"
 	"os"
@@ -35,12 +34,12 @@ func SetupFiber() {
 		ProxyHeader: fiber.HeaderXForwardedFor,
 	})
 	app.Use(logger.New())
-	app.Use(csrf.New(csrf.Config{
-		KeyLookup:      "form:csrf",
-		ContextKey:     "csrf",
-		CookieName:     "csrf_",
-		CookieSameSite: "Strict",
-	}))
+	//app.Use(csrf.New(csrf.Config{
+	//	KeyLookup:      "form:csrf",
+	//	ContextKey:     "csrf",
+	//	CookieName:     "csrf_",
+	//	CookieSameSite: "Strict",
+	//}))
 	//app.Use(handlers.HttpsForwarder)
 
 	app.Static("/", "./web/static")
@@ -63,14 +62,14 @@ func SetupFiber() {
 		if _, ok := AllowedIps[handlers.GetIPAddress(c)]; !ok {
 			return c.SendStatus(fiber.StatusForbidden)
 		}
-		return c.SendStatus(fiber.StatusForbidden)
+		return handlers.GetMusic(c)
 	})
 
 	app.Post("/download-custom", func(c *fiber.Ctx) error {
 		if _, ok := AllowedIps[handlers.GetIPAddress(c)]; !ok {
 			return c.SendStatus(fiber.StatusForbidden)
 		}
-		return c.SendStatus(fiber.StatusForbidden)
+		return handlers.UploadProcess(c, true)
 	})
 
 	err := app.Listen(fmt.Sprintf("%s:%s", configs.Get("FIBER_HOSTNAME"), configs.Get("FIBER_PORT")))
