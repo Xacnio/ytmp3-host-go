@@ -66,18 +66,17 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 		} else if cachedKey == "no" {
 			return c.SendString("Error: Invalid download.")
 		}
-		cmd := exec.Command("yt-dlp", "-j", payload.URL)
+		cmd := exec.Command("yt-dlp", "-j", "--no-playlist", payload.URL)
 		out, _ := cmd.Output()
 		videoX := struct {
-			ID         string              `json:"id"`
-			Title      string              `json:"title"`
-			Uploader   string              `json:"uploader"`
-			Filename   string              `json:"filename"`
-			Thumbnails []map[string]string `json:"thumbnails"`
-			Duration   int64               `json:"duration"`
-			Extractor  string              `json:"extractor"`
-			Artist     string              `json:"artist"`
-			Track      string              `json:"track"`
+			ID        string `json:"id"`
+			Title     string `json:"title"`
+			Uploader  string `json:"uploader"`
+			Filename  string `json:"filename"`
+			Duration  int64  `json:"duration"`
+			Extractor string `json:"extractor"`
+			Artist    string `json:"artist"`
+			Track     string `json:"track"`
 		}{}
 		json.Unmarshal(out, &videoX)
 		if videoX.ID == "" {
@@ -113,8 +112,7 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 			return c.SendString("Error: Maximum 10-minute videos are accepting!")
 		}
 		output := fmt.Sprintf("web/data/%s", videoX.Filename)
-		fmt.Println(exec.Command("yt-dlp", "-i", "--extract-audio", "-x", "--audio-format mp3", "--audio-quality 0", payload.URL).String())
-		exec.Command("yt-dlp", "-i", "--add-metadata", "--write-thumbnail", "--embed-thumbnail", "--extract-audio", "--audio-format", "mp3", "--audio-quality", "0", "--output", output, payload.URL).Output()
+		exec.Command("yt-dlp", "-i", "--add-metadata", "--write-thumbnail", "--embed-thumbnail", "--no-playlist", "--extract-audio", "--audio-format", "mp3", "--audio-quality", "0", "--output", output, payload.URL).Output()
 		if _, err := os.Stat(output); err == nil {
 			fData, err := os.Open(output)
 			if err != nil {
