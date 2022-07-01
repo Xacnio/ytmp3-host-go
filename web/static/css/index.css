@@ -1,0 +1,63 @@
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Open Sans',sans-serif;
+}
+
+.sf-container {
+    width: 90%;
+    margin-top: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    min-height: 300px;
+}
+
+.page-footer {
+    margin: 70px auto;
+    font-family: 'Open Sans',sans-serif;
+    text-transform: uppercase;
+    font-weight: 300;
+    font-size: 15px;
+    max-width: 700px;
+    width: 100%;
+    padding: 0 15px;
+}
+
+.page-footer span.creator {
+    float: right;
+    text-align: right;
+}
+
+h3, p {
+    text-align: center;
+}
+
+.upload-button {
+    cursor: pointer;
+    background: #5c67cb !important;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    text-transform: uppercase;
+    margin-top: -15px !important;
+    border-radius: 0 0 15px 15px !important;
+    transition: background 0.3s ease;
+}
+
+.upload-button:hover {
+    background: #434c9f !important;
+}
+
+.form-inner {
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+input.form-textx {
+    width: 100%;
+    margin-bottom: 14px;
+    height: 50px;
+    outline: none;
+    border: 1px solid #5c67cb;
+    padding: 0px 15px;
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <title>{{if .Title}}{{.Title}}{{else}}Youtube MP3 Hosting{{end}}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/index.css?v=3">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;700&family=Roboto&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="sf-container">
+        <h3>Youtube MP3 Hosting</h3>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="form-inner">
+                    <form action="/upload" method="post">
+                        <input type="hidden" name="csrf" value="{{.CSRF}}" />
+                        {{ if .Error }}
+                            <div class="alert alert-danger" id="error">{{.Error}}</div>
+                        {{ end }}
+                        <input class="form-textx" placeholder="Youtube URL" name="url" type="text">
+                        <div class="upload-button" id="upload-button" onclick="$('form').submit();">Download</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="page-footer">
+        <div class="row">
+            <div class="col-sm-9 col-xs-12">
+                YOUTUBE MP3 HOSTING<br>
+                THIS WEBSITE'S USING <a href="https://telegram.org/" target="_blank">TELEGRAM</a> CLOUD &amp; BOT TECHNOLOGIES
+            </div>
+            <div class="col-sm-3 col-xs-12">
+            <span class="creator">Creator: <a href="#">XACNIO</a><br>
+            </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
