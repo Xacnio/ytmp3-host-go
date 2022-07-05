@@ -35,8 +35,8 @@ func Init() {
 		if cmsg.ReplyTo != nil && cmsg.ReplyTo.Audio != nil {
 			var audio *tele.Audio
 			audio = cmsg.ReplyTo.Audio
-			if audio.FileSize > (1024 * 1024 * 15) {
-				return c.Reply("`MP3 couldn't be saved! Maximum file length: 15 MB!`", &tele.SendOptions{ParseMode: tele.ModeMarkdown})
+			if audio.FileSize > (1024 * 1024 * 20) {
+				return c.Reply("`MP3 couldn't be saved! Maximum file size: 20 MB!`", &tele.SendOptions{ParseMode: tele.ModeMarkdown})
 			}
 			filename := audio.FileName
 			title := audio.FileName

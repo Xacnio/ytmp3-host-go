@@ -113,13 +113,18 @@ func UploadProcess(c *fiber.Ctx, export bool) error {
 		}
 		output := fmt.Sprintf("web/data/%s", videoX.Filename)
 		exec.Command("yt-dlp", "-i", "--add-metadata", "--write-thumbnail", "--embed-thumbnail", "--no-playlist", "--extract-audio", "--audio-format", "mp3", "--audio-quality", "0", "--output", output, payload.URL).Output()
-		if _, err := os.Stat(output); err == nil {
+		if d, err := os.Stat(output); err == nil {
 			fData, err := os.Open(output)
 			if err != nil {
 				deleteFile(filename)
 				return c.SendString("Error: Download failed!")
 			}
 			reader := bufio.NewReader(fData)
+			if d.Size() > 20*1024*1024 {
+				fData.Close()
+				deleteFile(filename)
+				return c.SendString("Error: MP3 file size could be max 20 MB!")
+			}
 			url := fmt.Sprintf("%s/%s", configs.Get("FIBER_URL"), videoX.Filename)
 			document := &tele.Audio{File: tele.FromReader(reader), Caption: url, FileName: videoX.Filename}
 			result, err := bot.Bot.Send(&tele.Chat{ID: configs.GetInt64("TG_BOT_CHANNEL_ID")}, document, &tele.SendOptions{ParseMode: tele.ModeHTML})
